@@ -1,6 +1,6 @@
 package com.example.nutristride
 
-import android.app.Application
+import androidx.multidex.MultiDexApplication
 import com.example.nutristride.auth.FirebaseAuthManager
 import com.example.nutristride.data.sync.SyncManager
 import com.google.firebase.FirebaseApp
@@ -8,7 +8,7 @@ import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 
 @HiltAndroidApp
-class NutriStrideApplication : Application() {
+class NutriStrideApplication : MultiDexApplication() {
 
     @Inject
     lateinit var syncManager: SyncManager
