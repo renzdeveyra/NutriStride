@@ -40,11 +40,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.nutristride.data.model.FoodItem
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FoodSearchScreen(
+    viewModel: FoodSearchViewModel = hiltViewModel(),
     onBackClick: () -> Unit,
     onFoodItemClick: (String) -> Unit,
     onAddManualClick: () -> Unit,

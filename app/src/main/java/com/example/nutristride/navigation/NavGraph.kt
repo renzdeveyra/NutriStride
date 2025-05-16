@@ -39,7 +39,10 @@ fun NavGraph(navController: NavHostController) {
         // Food Logging Flow
         composable(route = Screen.FoodLog.route) {
             FoodLogScreen(
-                onBackClick = { navController.popBackStack() }
+                onBackClick = { navController.popBackStack() },
+                onSearchClick = { navController.navigate("food_search") },
+                onScanBarcodeClick = { navController.navigate("barcode_scanner") },
+                onFoodItemClick = { foodId -> navController.navigate("food_details/$foodId") }
             )
         }
 
