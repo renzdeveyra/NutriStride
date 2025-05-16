@@ -38,13 +38,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.nutristride.data.model.FoodItem
 import com.example.nutristride.data.model.MealType
 import java.util.UUID
+import java.util.Date
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ManualFoodEntryScreen(
+    viewModel: ManualFoodEntryViewModel = hiltViewModel(),
     onBackClick: () -> Unit,
     onSaveFood: (FoodItem) -> Unit
 ) {
@@ -272,18 +275,26 @@ fun ManualFoodEntryScreen(
                         fat.isNotBlank() &&
                         servingSize.isNotBlank()
                     ) {
+                        // Use the authManager from viewModel instead of calling getCurrentUserId directly
+                        val userId = viewModel.authManager.currentUserId ?: ""
+                        
                         val newFoodItem = FoodItem(
                             id = UUID.randomUUID().toString(),
+                            userId = userId,
                             name = foodName,
                             brand = if (brand.isBlank()) null else brand,
                             calories = calories.toIntOrNull() ?: 0,
-                            protein = protein.toFloatOrNull() ?: 0f,
-                            carbs = carbs.toFloatOrNull() ?: 0f,
-                            fat = fat.toFloatOrNull() ?: 0f,
-                            servingSize = servingSize.toFloatOrNull() ?: 0f,
+                            protein = protein.toDoubleOrNull() ?: 0.0,
+                            carbs = carbs.toDoubleOrNull() ?: 0.0,
+                            fat = fat.toDoubleOrNull() ?: 0.0,
+                            servingSize = servingSize.toDoubleOrNull() ?: 0.0,
                             servingUnit = servingUnit,
                             mealType = selectedMealType,
-                            isFavorite = saveToMyFoods
+                            isFavorite = saveToMyFoods,
+                            dateAdded = Date(),
+                            date = Date(),
+                            isPublic = false,
+                            consumptionCount = 1
                         )
                         onSaveFood(newFoodItem)
                     }

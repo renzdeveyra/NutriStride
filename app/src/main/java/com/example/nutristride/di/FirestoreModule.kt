@@ -2,6 +2,8 @@ package com.example.nutristride.di
 
 import com.example.nutristride.data.repository.FirestoreRepository
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -15,12 +17,12 @@ object FirestoreModule {
     @Provides
     @Singleton
     fun provideFirebaseFirestore(): FirebaseFirestore {
-        return FirebaseFirestore.getInstance()
+        return Firebase.firestore
     }
     
     @Provides
     @Singleton
-    fun provideFirestoreRepository(): FirestoreRepository {
-        return FirestoreRepository()
+    fun provideFirestoreRepository(firestore: FirebaseFirestore): FirestoreRepository {
+        return FirestoreRepository(firestore)
     }
 }

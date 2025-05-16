@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -17,7 +18,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.NoFood
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -29,29 +36,41 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.capitalize
+import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.nutristride.data.model.FoodItem
 import com.example.nutristride.data.model.MealType
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
-import java.util.Locale
+import java.util.Locale as JavaLocale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FoodDiaryScreen(
-    date: Date = Date(),
-    foodItems: Map<MealType, List<FoodItem>>,
-    totalCalories: Int,
+    viewModel: FoodDiaryViewModel = hiltViewModel(),
     onBackClick: () -> Unit,
     onAddFoodClick: () -> Unit,
-    onFoodItemClick: (String) -> Unit,
-    onDeleteFoodItem: (FoodItem) -> Unit
+    onFoodItemClick: (String) -> Unit
 ) {
-    val dateFormat = SimpleDateFormat("EEEE, MMMM d, yyyy", Locale.getDefault())
-    val formattedDate = dateFormat.format(date)
+    val foodItems by viewModel.foodItems.collectAsState()
+    val totalCalories by viewModel.totalCalories.collectAsState()
+    val selectedDate by viewModel.selectedDate.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val error by viewModel.error.collectAsState()
+    
+    // Format date for display
+    val dateFormatter = remember { SimpleDateFormat("EEEE, MMMM d, yyyy", JavaLocale.getDefault()) }
+    val formattedDate = remember(selectedDate) { dateFormatter.format(selectedDate) }
     
     Scaffold(
         topBar = {
@@ -85,125 +104,164 @@ fun FoodDiaryScreen(
             }
         }
     ) { innerPadding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(16.dp)
         ) {
-            // Date Display
-            Text(
-                text = formattedDate,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            // Total Calories
-            Text(
-                text = "Total Calories: $totalCalories",
-                style = MaterialTheme.typography.titleMedium
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            if (foodItems.isEmpty() || foodItems.all { it.value.isEmpty() }) {
-                // Empty State
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                    contentAlignment = Alignment.Center
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+            ) {
+                // Date selector
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
+                    IconButton(
+                        onClick = {
+                            val calendar = Calendar.getInstance()
+                            calendar.time = selectedDate
+                            calendar.add(Calendar.DAY_OF_MONTH, -1)
+                            viewModel.setDate(calendar.time)
+                        }
                     ) {
-                        Text(
-                            text = "No food logged for today",
-                            style = MaterialTheme.typography.bodyLarge
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowLeft,
+                            contentDescription = "Previous Day"
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Tap the + button to add food",
-                            style = MaterialTheme.typography.bodyMedium
+                    }
+                    
+                    Text(
+                        text = formattedDate,
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    
+                    IconButton(
+                        onClick = {
+                            val calendar = Calendar.getInstance()
+                            calendar.time = selectedDate
+                            calendar.add(Calendar.DAY_OF_MONTH, 1)
+                            viewModel.setDate(calendar.time)
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowRight,
+                            contentDescription = "Next Day"
                         )
                     }
                 }
-            } else {
-                // Food Items by Meal Type
-                LazyColumn(
-                    modifier = Modifier.weight(1f)
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Total calories
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
                 ) {
-                    // Breakfast
-                    item {
-                        MealTypeHeader(
-                            mealType = MealType.BREAKFAST,
-                            totalCalories = foodItems[MealType.BREAKFAST]?.sumOf { it.calories } ?: 0
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Total Calories",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Text(
+                            text = "$totalCalories",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold
                         )
                     }
-                    
-                    items(foodItems[MealType.BREAKFAST] ?: emptyList()) { foodItem ->
-                        FoodItemRow(
-                            foodItem = foodItem,
-                            onClick = { onFoodItemClick(foodItem.id) },
-                            onDelete = { onDeleteFoodItem(foodItem) }
-                        )
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Food items by meal type
+                if (foodItems.isEmpty() && !isLoading) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.NoFood,
+                                contentDescription = null,
+                                modifier = Modifier.size(64.dp),
+                                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "No food logged for this day",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Button(
+                                onClick = onAddFoodClick
+                            ) {
+                                Text("Add Food")
+                            }
+                        }
                     }
-                    
-                    item { Spacer(modifier = Modifier.height(16.dp)) }
-                    
-                    // Lunch
-                    item {
-                        MealTypeHeader(
-                            mealType = MealType.LUNCH,
-                            totalCalories = foodItems[MealType.LUNCH]?.sumOf { it.calories } ?: 0
-                        )
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        // Sort meal types in chronological order
+                        val sortedMealTypes = MealType.values().toList()
+                        
+                        sortedMealTypes.forEach { mealType ->
+                            val mealItems = foodItems[mealType] ?: emptyList()
+                            
+                            if (mealItems.isNotEmpty()) {
+                                item {
+                                    Text(
+                                        text = mealType.name.lowercase().capitalize(Locale.current),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        modifier = Modifier.padding(vertical = 8.dp)
+                                    )
+                                }
+                                
+                                items(mealItems) { foodItem ->
+                                    FoodItemCard(
+                                        foodItem = foodItem,
+                                        onClick = { onFoodItemClick(foodItem.id) },
+                                        onDelete = { viewModel.deleteFoodItem(foodItem) }
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                }
+                                
+                                item {
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                }
+                            }
+                        }
                     }
-                    
-                    items(foodItems[MealType.LUNCH] ?: emptyList()) { foodItem ->
-                        FoodItemRow(
-                            foodItem = foodItem,
-                            onClick = { onFoodItemClick(foodItem.id) },
-                            onDelete = { onDeleteFoodItem(foodItem) }
-                        )
-                    }
-                    
-                    item { Spacer(modifier = Modifier.height(16.dp)) }
-                    
-                    // Dinner
-                    item {
-                        MealTypeHeader(
-                            mealType = MealType.DINNER,
-                            totalCalories = foodItems[MealType.DINNER]?.sumOf { it.calories } ?: 0
-                        )
-                    }
-                    
-                    items(foodItems[MealType.DINNER] ?: emptyList()) { foodItem ->
-                        FoodItemRow(
-                            foodItem = foodItem,
-                            onClick = { onFoodItemClick(foodItem.id) },
-                            onDelete = { onDeleteFoodItem(foodItem) }
-                        )
-                    }
-                    
-                    item { Spacer(modifier = Modifier.height(16.dp)) }
-                    
-                    // Snacks
-                    item {
-                        MealTypeHeader(
-                            mealType = MealType.SNACK,
-                            totalCalories = foodItems[MealType.SNACK]?.sumOf { it.calories } ?: 0
-                        )
-                    }
-                    
-                    items(foodItems[MealType.SNACK] ?: emptyList()) { foodItem ->
-                        FoodItemRow(
-                            foodItem = foodItem,
-                            onClick = { onFoodItemClick(foodItem.id) },
-                            onDelete = { onDeleteFoodItem(foodItem) }
-                        )
-                    }
+                }
+            }
+            
+            // Loading indicator
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+            
+            // Error handling
+            error?.let { errorMessage ->
+                LaunchedEffect(errorMessage) {
+                    // Show error message (e.g., using a Snackbar)
                 }
             }
         }
@@ -211,45 +269,7 @@ fun FoodDiaryScreen(
 }
 
 @Composable
-fun MealTypeHeader(
-    mealType: MealType,
-    totalCalories: Int
-) {
-    Column(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = when (mealType) {
-                    MealType.BREAKFAST -> "Breakfast"
-                    MealType.LUNCH -> "Lunch"
-                    MealType.DINNER -> "Dinner"
-                    MealType.SNACK -> "Snacks"
-                },
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            
-            Text(
-                text = "$totalCalories cal",
-                style = MaterialTheme.typography.bodyMedium
-            )
-        }
-        
-        Divider(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp)
-        )
-    }
-}
-
-@Composable
-fun FoodItemRow(
+fun FoodItemCard(
     foodItem: FoodItem,
     onClick: () -> Unit,
     onDelete: () -> Unit
@@ -257,13 +277,13 @@ fun FoodItemRow(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
-            .clickable(onClick = onClick)
+            .clickable(onClick = onClick),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(

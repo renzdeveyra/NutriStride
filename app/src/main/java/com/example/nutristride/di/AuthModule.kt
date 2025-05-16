@@ -1,9 +1,9 @@
 package com.example.nutristride.di
 
 import com.example.nutristride.auth.FirebaseAuthManager
-import com.example.nutristride.data.repository.FirestoreRepository
-import com.example.nutristride.data.repository.UserRepository
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -17,15 +17,12 @@ object AuthModule {
     @Provides
     @Singleton
     fun provideFirebaseAuth(): FirebaseAuth {
-        return FirebaseAuth.getInstance()
+        return Firebase.auth
     }
     
     @Provides
     @Singleton
-    fun provideFirebaseAuthManager(
-        firestoreRepository: FirestoreRepository,
-        userRepository: UserRepository
-    ): FirebaseAuthManager {
-        return FirebaseAuthManager(firestoreRepository, userRepository)
+    fun provideFirebaseAuthManager(auth: FirebaseAuth): FirebaseAuthManager {
+        return FirebaseAuthManager(auth)
     }
 }

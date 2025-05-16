@@ -14,15 +14,15 @@ data class FoodItem(
     val name: String = "",
     val brand: String? = null,
     val calories: Int = 0,
-    val protein: Float = 0f,
-    val carbs: Float = 0f,
-    val fat: Float = 0f,
-    val servingSize: Float = 0f,
+    val protein: Double = 0.0,
+    val carbs: Double = 0.0,
+    val fat: Double = 0.0,
+    val servingSize: Double = 0.0,
     val servingUnit: String = "g",
     val isFavorite: Boolean = false,
-    val dateAdded: Long = System.currentTimeMillis(),
-    val lastConsumed: Long? = null,
+    val dateAdded: Date = Date(),
     val consumptionCount: Int = 0,
-    val date: Date = Date(),
-    val mealType: MealType = MealType.BREAKFAST
+    val mealType: MealType = MealType.BREAKFAST,
+    val date: Date? = null,
+    val isPublic: Boolean = false
 )

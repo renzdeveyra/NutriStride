@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
+import android.util.Log
 
 @Singleton
 class DataSynchronizer @Inject constructor(
@@ -104,11 +105,31 @@ class DataSynchronizer @Inject constructor(
     }
     
     /**
-     * Synchronizes a specific food item to Firestore
+     * Synchronizes a single food item to Firestore
      */
     suspend fun syncFoodItemToCloud(foodItem: FoodItem) {
         withContext(Dispatchers.IO) {
-            firestoreRepository.saveFoodItem(foodItem)
+            try {
+                firestoreRepository.saveFoodItem(foodItem)
+            } catch (e: Exception) {
+                Log.e("DataSynchronizer", "Error syncing food item to cloud: ${e.message}", e)
+            }
+        }
+    }
+    
+    /**
+     * Synchronizes a single food item from Firestore to local database
+     */
+    suspend fun syncFoodItemFromCloud(foodItemId: String) {
+        withContext(Dispatchers.IO) {
+            try {
+                val foodItem = firestoreRepository.getFoodItemById(foodItemId)
+                foodItem?.let {
+                    foodRepository.insertFoodItem(it)
+                }
+            } catch (e: Exception) {
+                Log.e("DataSynchronizer", "Error syncing food item from cloud: ${e.message}", e)
+            }
         }
     }
     

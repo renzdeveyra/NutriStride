@@ -310,10 +310,23 @@ fun FoodDetailsScreen(
                 // Log Food Button
                 Button(
                     onClick = {
-                        // Handle logging food here
+                        // Convert serving size to double
+                        val servingSizeValue = when (servingSize) {
+                            "0.5" -> 0.5
+                            "1" -> 1.0
+                            "2" -> 2.0
+                            "3" -> 3.0
+                            else -> 1.0
+                        } * (foodItem?.servingSize ?: 1.0)
+                        
+                        // Log food to Firestore
+                        viewModel.logFood(servingSizeValue, selectedMealType)
+                        
+                        // Navigate back
                         onBackClick()
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = foodItem != null
                 ) {
                     Text("Log Food")
                 }

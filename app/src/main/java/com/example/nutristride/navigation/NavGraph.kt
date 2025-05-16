@@ -43,9 +43,10 @@ fun NavGraph(navController: NavHostController) {
         composable(route = Screen.FoodLog.route) {
             FoodLogScreen(
                 onBackClick = { navController.popBackStack() },
-                onSearchClick = { navController.navigate("food_search") },
-                onScanBarcodeClick = { navController.navigate("barcode_scanner") },
-                onFoodItemClick = { foodId -> navController.navigate("food_details/$foodId") }
+                onAddFoodClick = { navController.navigate("food_search") },
+                onManualEntryClick = { navController.navigate("food_manual_entry") },
+                onFoodItemClick = { foodId -> navController.navigate("food_details/$foodId") },
+                onViewDiaryClick = { navController.navigate("food_diary") }
             )
         }
 
@@ -68,7 +69,8 @@ fun NavGraph(navController: NavHostController) {
         composable(route = "food_manual_entry") {
             ManualFoodEntryScreen(
                 onBackClick = { navController.popBackStack() },
-                onSaveFood = {
+                onSaveFood = { foodItem ->
+                    // Navigate back to the food log screen after saving
                     navController.popBackStack(Screen.FoodLog.route, false)
                 }
             )
@@ -76,12 +78,9 @@ fun NavGraph(navController: NavHostController) {
 
         composable(route = "food_diary") {
             FoodDiaryScreen(
-                foodItems = emptyMap(), // TODO: Load food items from repository
-                totalCalories = 0, // TODO: Calculate total calories
                 onBackClick = { navController.popBackStack() },
                 onAddFoodClick = { navController.navigate("food_search") },
-                onFoodItemClick = { foodId -> navController.navigate("food_details/$foodId") },
-                onDeleteFoodItem = { /* TODO: Delete food item */ }
+                onFoodItemClick = { foodId -> navController.navigate("food_details/$foodId") }
             )
         }
 

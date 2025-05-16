@@ -1,6 +1,8 @@
 package com.example.nutristride.ui.screens.food
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -8,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -17,7 +20,13 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.NoFood
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -47,16 +56,15 @@ import java.util.Locale
 fun FoodLogScreen(
     viewModel: FoodLogViewModel = hiltViewModel(),
     onBackClick: () -> Unit,
-    onSearchClick: () -> Unit,
-    onScanBarcodeClick: () -> Unit,
-    onFoodItemClick: (String) -> Unit = {}
+    onAddFoodClick: () -> Unit,
+    onManualEntryClick: () -> Unit,
+    onFoodItemClick: (String) -> Unit,
+    onViewDiaryClick: () -> Unit
 ) {
     val foodItems by viewModel.foodItems.collectAsState()
     val totalCalories by viewModel.totalCalories.collectAsState()
-    val date = Date() // Could be passed as parameter or from viewModel
-    val dateFormat = SimpleDateFormat("EEEE, MMMM d, yyyy", Locale.getDefault())
-    val formattedDate = dateFormat.format(date)
-
+    val isLoading by viewModel.isLoading.collectAsState()
+    
     Scaffold(
         topBar = {
             TopAppBar(
@@ -70,17 +78,10 @@ fun FoodLogScreen(
                     }
                 },
                 actions = {
-                    // Add search and barcode scan buttons
-                    IconButton(onClick = onSearchClick) {
+                    IconButton(onClick = onViewDiaryClick) {
                         Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Search Foods"
-                        )
-                    }
-                    IconButton(onClick = onScanBarcodeClick) {
-                        Icon(
-                            imageVector = Icons.Default.PhotoCamera,
-                            contentDescription = "Scan Barcode"
+                            imageVector = Icons.Default.CalendarToday,
+                            contentDescription = "View Diary"
                         )
                     }
                 },
@@ -91,50 +92,148 @@ fun FoodLogScreen(
                     actionIconContentColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onSearchClick,
-                containerColor = MaterialTheme.colorScheme.primary
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Add Food",
-                    tint = MaterialTheme.colorScheme.onPrimary
-                )
-            }
         }
     ) { innerPadding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(16.dp)
         ) {
-            // Date and calories summary
-            Text(
-                text = formattedDate,
-                style = MaterialTheme.typography.titleMedium
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+            ) {
+                // Today's date
+                val dateFormatter = SimpleDateFormat("EEEE, MMMM d", Locale.getDefault())
+                val today = dateFormatter.format(Date())
+                
+                Text(
+                    text = "Today, $today",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Total calories
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Total Calories",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Text(
+                            text = "$totalCalories",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                // Add Food Buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Button(
+                        onClick = onAddFoodClick,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = null,
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+                        Text("Search Food")
+                    }
+                    
+                    Spacer(modifier = Modifier.width(16.dp))
+                    
+                    Button(
+                        onClick = onManualEntryClick,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = null,
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+                        Text("Add Manually")
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                // Food items by meal type
+                if (foodItems.isEmpty() && !isLoading) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.NoFood,
+                                contentDescription = null,
+                                modifier = Modifier.size(64.dp),
+                                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "No food logged today",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                            )
+                        }
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        // Sort meal types in chronological order
+                        val sortedMealTypes = MealType.values().sortedBy { it.ordinal }
+                        
+                        sortedMealTypes.forEach { mealType ->
+                            item {
+                                FoodLogMealHeader(
+                                    mealType = mealType,
+                                    totalCalories = foodItems[mealType]?.sumOf { it.calories } ?: 0
+                                )
+                            }
+                            
+                            items(foodItems[mealType] ?: emptyList()) { foodItem ->
+                                FoodLogItemRow(
+                                    foodItem = foodItem,
+                                    onClick = { onFoodItemClick(foodItem.id) },
+                                    onDelete = { viewModel.deleteFoodItem(it) }
+                                )
+                            }
+                            
+                            item { Spacer(modifier = Modifier.height(16.dp)) }
+                        }
+                    }
+                }
+            }
             
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            Text(
-                text = "Total Calories: $totalCalories kcal",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Food items by meal type
-            if (foodItems.isEmpty()) {
-                EmptyFoodLog(onAddClick = onSearchClick)
-            } else {
-                FoodLogContent(
-                    foodItems = foodItems,
-                    onFoodItemClick = onFoodItemClick,
-                    onDeleteFoodItem = { viewModel.deleteFoodItem(it) }
+            // Loading indicator
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center)
                 )
             }
         }
@@ -270,7 +369,7 @@ fun FoodLogMealHeader(mealType: MealType, totalCalories: Int) {
 fun FoodLogItemRow(
     foodItem: FoodItem,
     onClick: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: (FoodItem) -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -312,7 +411,7 @@ fun FoodLogItemRow(
             
             Spacer(modifier = Modifier.width(8.dp))
             
-            IconButton(onClick = onDelete) {
+            IconButton(onClick = { onDelete(foodItem) }) {
                 Icon(
                     imageVector = Icons.Default.Delete,
                     contentDescription = "Delete",
