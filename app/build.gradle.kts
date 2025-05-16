@@ -83,6 +83,8 @@ dependencies {
     implementation(libs.kotlinx.coroutines.play.services)
     implementation(libs.datastore.preferences)
     implementation(libs.androidx.material.icons.extended)
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.gson)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -94,4 +96,12 @@ dependencies {
     implementation("androidx.multidex:multidex:2.0.1")
     //noinspection KaptUsageInsteadOfKsp
     kapt(libs.room.compiler)
+    
+    // ML Kit for barcode scanning
+    implementation("com.google.mlkit:barcode-scanning:17.2.0")
+    
+    // CameraX
+    implementation("androidx.camera:camera-camera2:1.3.0")
+    implementation("androidx.camera:camera-lifecycle:1.3.0")
+    implementation("androidx.camera:camera-view:1.3.0")
 }
