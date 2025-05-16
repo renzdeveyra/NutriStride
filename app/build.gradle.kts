@@ -100,8 +100,11 @@ dependencies {
     // ML Kit for barcode scanning
     implementation("com.google.mlkit:barcode-scanning:17.2.0")
     
-    // CameraX
+    // CameraX with correct versions
     implementation("androidx.camera:camera-camera2:1.3.0")
     implementation("androidx.camera:camera-lifecycle:1.3.0")
     implementation("androidx.camera:camera-view:1.3.0")
+    
+    // Add Guava for ListenableFuture
+    implementation("com.google.guava:guava:31.1-android")
 }

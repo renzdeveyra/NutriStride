@@ -4,12 +4,9 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.nutristride.ui.screens.DashboardScreen
-import com.example.nutristride.ui.screens.food.FoodLogScreen
-import com.example.nutristride.ui.screens.food.FoodSearchScreen
-import com.example.nutristride.ui.screens.food.FoodDetailsScreen
-import com.example.nutristride.ui.screens.food.ManualFoodEntryScreen
-import com.example.nutristride.ui.screens.food.FoodDiaryScreen
+import com.example.nutristride.ui.screens.food.*
 import com.example.nutristride.ui.screens.activity.ActivityLogScreen
 import com.example.nutristride.ui.screens.activity.ActivitySelectionScreen
 import com.example.nutristride.ui.screens.activity.ActivityTrackingScreen
@@ -188,7 +185,7 @@ fun NavGraph(navController: NavHostController) {
         }
 
         composable(route = "barcode_scanner") {
-            val viewModel: FoodSearchViewModel = hiltViewModel()
+            val viewModel:  FoodSearchViewModel = hiltViewModel()
             BarcodeScannerScreen(
                 viewModel = viewModel,
                 onBackClick = { navController.popBackStack() },
