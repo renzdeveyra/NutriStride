@@ -90,6 +90,8 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    //noinspection UseTomlInstead
     implementation("androidx.multidex:multidex:2.0.1")
+    //noinspection KaptUsageInsteadOfKsp
     kapt(libs.room.compiler)
 }
