@@ -16,7 +16,6 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -30,10 +29,10 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,21 +41,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.nutristride.data.model.FoodItem
 import com.example.nutristride.data.model.MealType
+import java.util.Date
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FoodDetailsScreen(
-    foodItem: FoodItem?,
-    onBackClick: () -> Unit,
-    onLogFoodClick: (FoodItem, MealType, Float) -> Unit,
-    onToggleFavorite: (FoodItem) -> Unit
+    viewModel: FoodDetailsViewModel = hiltViewModel(),
+    onBackClick: () -> Unit
 ) {
-    var selectedMealType by remember { mutableStateOf(MealType.BREAKFAST) }
-    var servingSize by remember { mutableStateOf("1") }
+    val foodItem by viewModel.foodItem.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val error by viewModel.error.collectAsState()
+    
+    // Add missing variable declarations
     var expanded by remember { mutableStateOf(false) }
+    var servingSize by remember { mutableStateOf("1") }
     val servingSizeOptions = listOf("0.5", "1", "1.5", "2", "2.5", "3")
+    var selectedMealType by remember { mutableStateOf(MealType.BREAKFAST) }
     
     Scaffold(
         topBar = {
@@ -72,9 +76,12 @@ fun FoodDetailsScreen(
                 },
                 actions = {
                     if (foodItem != null) {
-                        IconButton(onClick = { onToggleFavorite(foodItem) }) {
+                        IconButton(onClick = { viewModel.toggleFavorite() }) {
                             Icon(
-                                imageVector = if (foodItem.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                imageVector = if (foodItem?.isFavorite == true) 
+                                    Icons.Filled.Favorite 
+                                else 
+                                    Icons.Filled.FavoriteBorder,
                                 contentDescription = "Toggle Favorite"
                             )
                         }
@@ -88,12 +95,12 @@ fun FoodDetailsScreen(
                 )
             )
         }
-    ) { innerPadding ->
+    ) { paddingValues ->
         if (foodItem == null) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding)
+                    .padding(paddingValues)
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
@@ -107,19 +114,19 @@ fun FoodDetailsScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding)
+                    .padding(paddingValues)
                     .padding(16.dp)
                     .verticalScroll(rememberScrollState())
             ) {
                 // Food Name and Brand
                 Text(
-                    text = foodItem.name,
+                    text = foodItem?.name ?: "",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold
                 )
-                if (foodItem.brand != null) {
+                if (foodItem?.brand != null) {
                     Text(
-                        text = foodItem.brand,
+                        text = foodItem?.brand ?: "",
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
@@ -143,32 +150,30 @@ fun FoodDetailsScreen(
                         
                         // Per serving info
                         Text(
-                            text = "Per serving (${foodItem.servingSize} ${foodItem.servingUnit})",
+                            text = "Per serving (${foodItem?.servingSize ?: 0} ${foodItem?.servingUnit ?: "g"})",
                             style = MaterialTheme.typography.bodyMedium
                         )
                         
                         Spacer(modifier = Modifier.height(8.dp))
                         
-                        // Calories
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
                                 text = "Calories",
-                                style = MaterialTheme.typography.bodyLarge,
+                                style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "${foodItem.calories}",
-                                style = MaterialTheme.typography.bodyLarge,
+                                text = "${foodItem?.calories ?: 0} kcal",
+                                style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold
                             )
                         }
                         
-                        Divider(modifier = Modifier.padding(vertical = 8.dp))
+                        Spacer(modifier = Modifier.height(4.dp))
                         
-                        // Macronutrients
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
@@ -178,7 +183,7 @@ fun FoodDetailsScreen(
                                 style = MaterialTheme.typography.bodyMedium
                             )
                             Text(
-                                text = "${foodItem.protein}g",
+                                text = "${foodItem?.protein ?: 0}g",
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         }
@@ -194,7 +199,7 @@ fun FoodDetailsScreen(
                                 style = MaterialTheme.typography.bodyMedium
                             )
                             Text(
-                                text = "${foodItem.carbs}g",
+                                text = "${foodItem?.carbs ?: 0}g",
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         }
@@ -210,7 +215,7 @@ fun FoodDetailsScreen(
                                 style = MaterialTheme.typography.bodyMedium
                             )
                             Text(
-                                text = "${foodItem.fat}g",
+                                text = "${foodItem?.fat ?: 0}g",
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         }
@@ -266,9 +271,9 @@ fun FoodDetailsScreen(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
-                
+
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
                 SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                     SegmentedButton(
                         selected = selectedMealType == MealType.BREAKFAST,
@@ -305,11 +310,8 @@ fun FoodDetailsScreen(
                 // Log Food Button
                 Button(
                     onClick = {
-                        onLogFoodClick(
-                            foodItem,
-                            selectedMealType,
-                            servingSize.toFloatOrNull() ?: 1f
-                        )
+                        // Handle logging food here
+                        onBackClick()
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {

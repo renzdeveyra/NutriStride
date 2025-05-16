@@ -4,9 +4,12 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.nutristride.ui.screens.DashboardScreen
-import com.example.nutristride.ui.screens.food.*
+import com.example.nutristride.ui.screens.food.FoodLogScreen
+import com.example.nutristride.ui.screens.food.FoodSearchScreen
+import com.example.nutristride.ui.screens.food.FoodDetailsScreen
+import com.example.nutristride.ui.screens.food.ManualFoodEntryScreen
+import com.example.nutristride.ui.screens.food.FoodDiaryScreen
 import com.example.nutristride.ui.screens.activity.ActivityLogScreen
 import com.example.nutristride.ui.screens.activity.ActivitySelectionScreen
 import com.example.nutristride.ui.screens.activity.ActivityTrackingScreen
@@ -51,19 +54,14 @@ fun NavGraph(navController: NavHostController) {
                 onBackClick = { navController.popBackStack() },
                 onFoodItemClick = { foodId -> navController.navigate("food_details/$foodId") },
                 onAddManualClick = { navController.navigate("food_manual_entry") },
-                onScanBarcodeClick = { navController.navigate("barcode_scanner") }
+                onScanBarcodeClick = { /* TODO: Implement barcode scanning */ }
             )
         }
 
         composable(route = "food_details/{foodId}") { backStackEntry ->
             val foodId = backStackEntry.arguments?.getString("foodId") ?: ""
             FoodDetailsScreen(
-                foodItem = null, // TODO: Load food item from repository
-                onBackClick = { navController.popBackStack() },
-                onLogFoodClick = { _, _, _ ->
-                    navController.popBackStack(Screen.FoodLog.route, false)
-                },
-                onToggleFavorite = { /* TODO: Toggle favorite status */ }
+                onBackClick = { navController.popBackStack() }
             )
         }
 
@@ -185,18 +183,6 @@ fun NavGraph(navController: NavHostController) {
 
         composable(route = Screen.Settings.route) {
             SettingsScreen(onBackClick = { navController.popBackStack() })
-        }
-
-        composable(route = "barcode_scanner") {
-            val viewModel:  FoodSearchViewModel = hiltViewModel()
-            BarcodeScannerScreen(
-                viewModel = viewModel,
-                onBackClick = { navController.popBackStack() },
-                onBarcodeDetected = { barcode ->
-                    viewModel.scanBarcode(barcode)
-                    navController.popBackStack()
-                }
-            )
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.example.nutristride.data.repository
 
+import android.util.Log
 import com.example.nutristride.data.api.OpenFoodFactsResponse
 import com.example.nutristride.data.api.OpenFoodFactsSearchResponse
 import com.example.nutristride.data.api.OpenFoodFactsService
@@ -8,25 +9,34 @@ import com.example.nutristride.data.model.MealType
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
+import java.util.Date
 
 @Singleton
 class FoodApiRepository @Inject constructor(
     private val openFoodFactsService: OpenFoodFactsService
 ) {
+    private val TAG = "FoodApiRepository"
+
     suspend fun searchFoodByName(query: String): List<FoodItem> {
         return try {
+            Log.d(TAG, "Searching for food with query: $query")
             val response = openFoodFactsService.searchProducts(query)
+            Log.d(TAG, "Search response received: ${response.count} products found")
             mapProductsToFoodItems(response)
         } catch (e: Exception) {
+            Log.e(TAG, "Error searching for food: ${e.message}", e)
             emptyList()
         }
     }
 
     suspend fun getFoodByBarcode(barcode: String): FoodItem? {
         return try {
+            Log.d(TAG, "Getting food by barcode: $barcode")
             val response = openFoodFactsService.getProductByBarcode(barcode)
+            Log.d(TAG, "Barcode response received: ${response.product.productName}")
             mapProductToFoodItem(response)
         } catch (e: Exception) {
+            Log.e(TAG, "Error getting food by barcode: ${e.message}", e)
             null
         }
     }
@@ -44,9 +54,11 @@ class FoodApiRepository @Inject constructor(
                     fat = product.nutrients.fat ?: 0f,
                     servingSize = parseServingSize(product.servingSize),
                     servingUnit = "g",
-                    mealType = MealType.BREAKFAST
+                    mealType = MealType.BREAKFAST,
+                    date = Date()
                 )
             } catch (e: Exception) {
+                Log.e(TAG, "Error mapping product to food item: ${e.message}", e)
                 null
             }
         }
@@ -65,9 +77,11 @@ class FoodApiRepository @Inject constructor(
                 fat = product.nutrients.fat ?: 0f,
                 servingSize = parseServingSize(product.servingSize),
                 servingUnit = "g",
-                mealType = MealType.BREAKFAST
+                mealType = MealType.BREAKFAST,
+                date = Date()
             )
         } catch (e: Exception) {
+            Log.e(TAG, "Error mapping product to food item: ${e.message}", e)
             null
         }
     }

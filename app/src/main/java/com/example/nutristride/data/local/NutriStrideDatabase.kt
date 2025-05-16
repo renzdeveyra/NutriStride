@@ -17,7 +17,7 @@ import com.example.nutristride.data.model.UserProfile
         UserGoals::class,
         UserProfile::class
     ],
-    version = 1,
+    version = 2,  // Increment version number
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -39,7 +39,7 @@ abstract class NutriStrideDatabase : RoomDatabase() {
                     NutriStrideDatabase::class.java,
                     "nutristride_database"
                 )
-                .fallbackToDestructiveMigration()
+                .fallbackToDestructiveMigration()  // This will recreate tables if schema changes
                 .build()
                 INSTANCE = instance
                 instance

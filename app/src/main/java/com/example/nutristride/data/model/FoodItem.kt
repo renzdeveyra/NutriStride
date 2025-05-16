@@ -4,13 +4,13 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.google.firebase.firestore.DocumentId
 import java.util.Date
-import java.util.UUID
 
 @Entity(tableName = "food_items")
 data class FoodItem(
     @PrimaryKey
     @DocumentId
-    val id: String = UUID.randomUUID().toString(),
+    val id: String = "",
+    val userId: String = "",
     val name: String = "",
     val brand: String? = null,
     val calories: Int = 0,
@@ -19,15 +19,10 @@ data class FoodItem(
     val fat: Float = 0f,
     val servingSize: Float = 0f,
     val servingUnit: String = "g",
-    val mealType: MealType = MealType.BREAKFAST,
-    val date: Date = Date(),
     val isFavorite: Boolean = false,
-    val userId: String? = null
+    val dateAdded: Long = System.currentTimeMillis(),
+    val lastConsumed: Long? = null,
+    val consumptionCount: Int = 0,
+    val date: Date = Date(),
+    val mealType: MealType = MealType.BREAKFAST
 )
-
-enum class MealType {
-    BREAKFAST,
-    LUNCH,
-    DINNER,
-    SNACK
-}
