@@ -108,4 +108,7 @@ dependencies {
     
     // Add Guava for ListenableFuture
     implementation("com.google.guava:guava:31.1-android")
+    
+    // Google Sign-In
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
 }

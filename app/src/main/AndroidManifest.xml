@@ -5,7 +5,8 @@
     <!-- Add internet permission for Firestore -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-
+    
+    <!-- Rest of manifest -->
     <application
         android:name=".NutriStrideApplication"
         android:allowBackup="true"

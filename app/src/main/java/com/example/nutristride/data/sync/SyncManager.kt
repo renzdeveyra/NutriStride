@@ -33,7 +33,7 @@ class SyncManager @Inject constructor(
             .build()
         
         workManager.enqueueUniquePeriodicWork(
-            SyncWorker.WORK_NAME,
+            WORK_NAME,
             ExistingPeriodicWorkPolicy.KEEP,
             syncRequest
         )
@@ -43,6 +43,10 @@ class SyncManager @Inject constructor(
      * Cancel scheduled background sync
      */
     fun cancelPeriodicalSync() {
-        workManager.cancelUniqueWork(SyncWorker.WORK_NAME)
+        workManager.cancelUniqueWork(WORK_NAME)
+    }
+    
+    companion object {
+        const val WORK_NAME = "data_sync_work"
     }
 }

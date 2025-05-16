@@ -6,6 +6,7 @@ import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
+import com.google.firebase.auth.GoogleAuthProvider
 
 @Singleton
 class FirebaseAuthManager @Inject constructor(
@@ -79,5 +80,36 @@ class FirebaseAuthManager @Inject constructor(
             Log.e(TAG, "Failed to delete account: ${e.message}", e)
             Result.failure(e)
         }
+    }
+
+    suspend fun signInWithGoogle(idToken: String): Result<FirebaseUser> {
+        return try {
+            val credential = GoogleAuthProvider.getCredential(idToken, null)
+            val authResult = auth.signInWithCredential(credential).await()
+            authResult.user?.let {
+                Log.d(TAG, "User signed in with Google: ${it.uid}")
+                Result.success(it)
+            } ?: Result.failure(Exception("Google authentication failed"))
+        } catch (e: Exception) {
+            Log.e(TAG, "Google sign in failed: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+
+    suspend fun signInAnonymously(): Result<FirebaseUser> {
+        return try {
+            val authResult = auth.signInAnonymously().await()
+            authResult.user?.let {
+                Log.d(TAG, "User signed in anonymously: ${it.uid}")
+                Result.success(it)
+            } ?: Result.failure(Exception("Anonymous authentication failed"))
+        } catch (e: Exception) {
+            Log.e(TAG, "Anonymous sign in failed: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+
+    fun isAnonymousUser(): Boolean {
+        return auth.currentUser?.isAnonymous ?: false
     }
 }

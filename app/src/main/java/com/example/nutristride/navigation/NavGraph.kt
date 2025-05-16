@@ -23,13 +23,38 @@ import com.example.nutristride.ui.screens.recipes.RecipesScreen
 import com.example.nutristride.ui.screens.profile.ProfileScreen
 import com.example.nutristride.ui.screens.settings.SettingsScreen
 import com.example.nutristride.data.model.ActivityType
+import com.example.nutristride.ui.screens.auth.LoginScreen
+import com.example.nutristride.ui.viewmodels.AuthViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import com.example.nutristride.ui.viewmodels.AuthState
 
 @Composable
-fun NavGraph(navController: NavHostController) {
+fun NavGraph(
+    navController: NavHostController,
+    authViewModel: AuthViewModel = hiltViewModel()
+) {
+    val authState by authViewModel.authState.collectAsState()
+    
     NavHost(
         navController = navController,
-        startDestination = Screen.Dashboard.route
+        startDestination = when (authState) {
+            is AuthState.Authenticated, is AuthState.GuestUser -> Screen.Dashboard.route
+            else -> "login"
+        }
     ) {
+        // Add login screen
+        composable(route = "login") {
+            LoginScreen(
+                onLoginSuccess = {
+                    navController.navigate(Screen.Dashboard.route) {
+                        popUpTo("login") { inclusive = true }
+                    }
+                }
+            )
+        }
+        
         composable(route = Screen.Dashboard.route) {
             DashboardScreen(
                 onFoodClick = { navController.navigate(Screen.FoodLog.route) },
@@ -177,7 +202,16 @@ fun NavGraph(navController: NavHostController) {
         }
 
         composable(route = Screen.Profile.route) {
-            ProfileScreen(onBackClick = { navController.popBackStack() })
+            ProfileScreen(
+                onBackClick = { navController.popBackStack() },
+                onSignOut = {
+                    authViewModel.signOut()
+                    navController.navigate("login") {
+                        popUpTo(Screen.Dashboard.route) { inclusive = true }
+                    }
+                },
+                isGuestUser = authState is AuthState.GuestUser
+            )
         }
 
         composable(route = Screen.Settings.route) {
